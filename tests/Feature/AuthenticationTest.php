@@ -122,3 +122,18 @@ it('renders social login buttons if providers are available', function () {
         ->assertSee('Facebook')
         ->assertDontSee('Twitter');
 });
+
+// New test for invalid email hash verification
+it('does not verify email with invalid hash', function () {
+    $user = User::factory()->unverified()->create();
+    
+    $verificationUrl = URL::temporarySignedRoute(
+        'verification.verify',
+        now()->addMinutes(60),
+        ['id' => $user->id, 'hash' => sha1('wrong-email')]
+    );
+
+    $this->actingAs($user)->get($verificationUrl);
+
+    $this->assertFalse($user->fresh()->hasVerifiedEmail());
+});
